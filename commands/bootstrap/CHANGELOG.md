@@ -3,6 +3,26 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [3.4.1](https://github.com/lerna/lerna/compare/v3.4.0...v3.4.1) (2018-10-04)
+
+
+### Bug Fixes
+
+* **bootstrap:** Constrain npm-conf argument object to options.registry only ([987fd26](https://github.com/lerna/lerna/commit/987fd26))
+
+
+
+
+
+<a name="3.3.2"></a>
+## [3.3.2](https://github.com/lerna/lerna/compare/v3.3.1...v3.3.2) (2018-09-12)
+
+**Note:** Version bump only for package @lerna/bootstrap
+
+
+
+
+
 <a name="3.3.1"></a>
 ## [3.3.1](https://github.com/lerna/lerna/compare/v3.3.0...v3.3.1) (2018-09-11)
 

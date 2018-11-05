@@ -3,6 +3,48 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [3.4.3](https://github.com/lerna/lerna/compare/v3.4.2...v3.4.3) (2018-10-10)
+
+**Note:** Version bump only for package lerna
+
+
+
+
+
+## [3.4.2](https://github.com/lerna/lerna/compare/v3.4.1...v3.4.2) (2018-10-09)
+
+**Note:** Version bump only for package lerna
+
+
+
+
+
+## [3.4.1](https://github.com/lerna/lerna/compare/v3.4.0...v3.4.1) (2018-10-04)
+
+**Note:** Version bump only for package lerna
+
+
+
+
+
+<a name="3.4.0"></a>
+# [3.4.0](https://github.com/lerna/lerna/compare/v3.3.2...v3.4.0) (2018-09-14)
+
+**Note:** Version bump only for package lerna
+
+
+
+
+
+<a name="3.3.2"></a>
+## [3.3.2](https://github.com/lerna/lerna/compare/v3.3.1...v3.3.2) (2018-09-12)
+
+**Note:** Version bump only for package lerna
+
+
+
+
+
 <a name="3.3.1"></a>
 ## [3.3.1](https://github.com/lerna/lerna/compare/v3.3.0...v3.3.1) (2018-09-11)
 

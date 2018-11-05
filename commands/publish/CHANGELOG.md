@@ -3,6 +3,65 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [3.4.3](https://github.com/lerna/lerna/compare/v3.4.2...v3.4.3) (2018-10-10)
+
+
+### Bug Fixes
+
+* **publish:** Use correct field name when limiting retries ([76589d4](https://github.com/lerna/lerna/commit/76589d4))
+
+
+
+
+
+## [3.4.2](https://github.com/lerna/lerna/compare/v3.4.1...v3.4.2) (2018-10-09)
+
+
+### Bug Fixes
+
+* **publish:** Prevent retries during access validation so third-party registries are skipped faster ([a89ae62](https://github.com/lerna/lerna/commit/a89ae62))
+* **publish:** Use modern auth resolution ([7ba41a6](https://github.com/lerna/lerna/commit/7ba41a6))
+
+
+
+
+
+## [3.4.1](https://github.com/lerna/lerna/compare/v3.4.0...v3.4.1) (2018-10-04)
+
+
+### Bug Fixes
+
+* **publish:** Overwrite Yarn registry proxy when encountered ([f7fdc77](https://github.com/lerna/lerna/commit/f7fdc77))
+* **publish:** Set token on npm config, allow third-party registries to remain non-compliant ([06a9479](https://github.com/lerna/lerna/commit/06a9479))
+
+
+
+
+
+<a name="3.4.0"></a>
+# [3.4.0](https://github.com/lerna/lerna/compare/v3.3.2...v3.4.0) (2018-09-14)
+
+
+### Features
+
+* **publish:** Use APIs for validation queries instead of CLI ([65fc603](https://github.com/lerna/lerna/commit/65fc603))
+
+
+
+
+
+<a name="3.3.2"></a>
+## [3.3.2](https://github.com/lerna/lerna/compare/v3.3.1...v3.3.2) (2018-09-12)
+
+
+### Bug Fixes
+
+* **publish:** Allow `--force-publish` in a canary release ([b97d9a3](https://github.com/lerna/lerna/commit/b97d9a3)), closes [#1638](https://github.com/lerna/lerna/issues/1638)
+
+
+
+
+
 <a name="3.3.1"></a>
 ## [3.3.1](https://github.com/lerna/lerna/compare/v3.3.0...v3.3.1) (2018-09-11)
 

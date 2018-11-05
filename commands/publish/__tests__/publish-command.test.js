@@ -3,7 +3,7 @@
 // local modules _must_ be explicitly mocked
 jest.mock("../lib/get-packages-without-license");
 jest.mock("../lib/verify-npm-package-access");
-jest.mock("../lib/verify-npm-registry");
+jest.mock("../lib/get-npm-username");
 // FIXME: better mock for version command
 jest.mock("../../version/lib/git-push");
 jest.mock("../../version/lib/is-anything-committed");
@@ -16,7 +16,7 @@ const PromptUtilities = require("@lerna/prompt");
 const collectUpdates = require("@lerna/collect-updates");
 const output = require("@lerna/output");
 const checkWorkingTree = require("@lerna/check-working-tree");
-const verifyNpmRegistry = require("../lib/verify-npm-registry");
+const getNpmUsername = require("../lib/get-npm-username");
 const verifyNpmPackageAccess = require("../lib/verify-npm-package-access");
 
 // helpers
@@ -42,7 +42,7 @@ describe("PublishCommand", () => {
 
       const logMessages = loggingOutput("success");
       expect(logMessages).toContain("No changed packages to publish");
-      expect(verifyNpmRegistry).not.toBeCalled();
+      expect(verifyNpmPackageAccess).not.toBeCalled();
     });
 
     it("exits early when no changes found from-git", async () => {
@@ -52,7 +52,7 @@ describe("PublishCommand", () => {
 
       const logMessages = loggingOutput("success");
       expect(logMessages).toContain("No changed packages to publish");
-      expect(verifyNpmRegistry).not.toBeCalled();
+      expect(verifyNpmPackageAccess).not.toBeCalled();
     });
 
     it("exits non-zero with --scope", async () => {
@@ -104,8 +104,8 @@ Set {
       expect(npmDistTag.remove).not.toBeCalled();
       expect(npmDistTag.add).not.toBeCalled();
 
-      expect(verifyNpmRegistry).toBeCalled();
-      expect(verifyNpmRegistry.registry.get(testDir)).toBe("default registry");
+      expect(getNpmUsername).toBeCalled();
+      expect(getNpmUsername.registry.get(testDir).get("registry")).toBe("https://registry.npmjs.org/");
 
       expect(verifyNpmPackageAccess).toBeCalled();
       expect(verifyNpmPackageAccess.registry.get(testDir)).toMatchInlineSnapshot(`
@@ -114,7 +114,7 @@ Set {
   "package-2",
   "package-3",
   "package-4",
-  "registry: default",
+  "username: lerna-test",
 }
 `);
     });
@@ -251,15 +251,22 @@ Set {
         expect.objectContaining({ registry })
       );
     });
-  });
 
-  describe("--no-verify-registry", () => {
-    it("skips npm registry ping", async () => {
-      const cwd = await initFixture("normal");
+    it("overwrites yarn registry proxy with https://registry.npmjs.org/", async () => {
+      const testDir = await initFixture("normal");
+      const registry = "https://registry.yarnpkg.com";
 
-      await lernaPublish(cwd)("--no-verify-registry");
+      await lernaPublish(testDir)("--registry", registry);
 
-      expect(verifyNpmRegistry).not.toBeCalled();
+      expect(npmPublish).toBeCalledWith(
+        expect.objectContaining({ name: "package-1" }),
+        undefined, // dist-tag
+        expect.objectContaining({ registry: "https://registry.npmjs.org/" })
+      );
+
+      const logMessages = loggingOutput("warn");
+      expect(logMessages).toContain("Yarn's registry proxy is broken, replacing with public npm registry");
+      expect(logMessages).toContain("If you don't have an npm token, you should exit and run `npm login`");
     });
   });
 
@@ -268,6 +275,16 @@ Set {
       const cwd = await initFixture("normal");
 
       await lernaPublish(cwd)("--no-verify-access");
+
+      expect(verifyNpmPackageAccess).not.toBeCalled();
+    });
+
+    it("is implied when npm username is undefined", async () => {
+      getNpmUsername.mockImplementationOnce(() => Promise.resolve());
+
+      const cwd = await initFixture("normal");
+
+      await lernaPublish(cwd)("--registry", "https://my-private-registry");
 
       expect(verifyNpmPackageAccess).not.toBeCalled();
     });

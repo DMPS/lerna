@@ -7,6 +7,7 @@ const pMap = require("p-map");
 const pPipe = require("p-pipe");
 const pReduce = require("p-reduce");
 const semver = require("semver");
+const getAuth = require("npm-registry-fetch/auth");
 
 const Command = require("@lerna/command");
 const describeRef = require("@lerna/describe-ref");
@@ -14,6 +15,7 @@ const checkWorkingTree = require("@lerna/check-working-tree");
 const PromptUtilities = require("@lerna/prompt");
 const output = require("@lerna/output");
 const collectUpdates = require("@lerna/collect-updates");
+const npmConf = require("@lerna/npm-conf");
 const npmDistTag = require("@lerna/npm-dist-tag");
 const npmPublish = require("@lerna/npm-publish");
 const { createRunner } = require("@lerna/run-lifecycle");
@@ -24,11 +26,11 @@ const versionCommand = require("@lerna/version");
 const createTempLicenses = require("./lib/create-temp-licenses");
 const getCurrentSHA = require("./lib/get-current-sha");
 const getCurrentTags = require("./lib/get-current-tags");
+const getNpmUsername = require("./lib/get-npm-username");
 const getTaggedPackages = require("./lib/get-tagged-packages");
 const getPackagesWithoutLicense = require("./lib/get-packages-without-license");
 const gitCheckout = require("./lib/git-checkout");
 const removeTempLicenses = require("./lib/remove-temp-licenses");
-const verifyNpmRegistry = require("./lib/verify-npm-registry");
 const verifyNpmPackageAccess = require("./lib/verify-npm-package-access");
 
 module.exports = factory;
@@ -61,17 +63,47 @@ class PublishCommand extends Command {
 
     // inverted boolean options
     this.verifyAccess = this.options.verifyAccess !== false;
-    this.verifyRegistry = this.options.verifyRegistry !== false;
 
     // https://docs.npmjs.com/misc/config#save-prefix
     this.savePrefix = this.options.exact ? "" : "^";
 
+    this.conf = npmConf({
+      log: this.logger,
+      registry: this.options.registry,
+    });
+
+    if (this.conf.get("registry") === "https://registry.yarnpkg.com") {
+      this.logger.warn("", "Yarn's registry proxy is broken, replacing with public npm registry");
+      this.logger.warn("", "If you don't have an npm token, you should exit and run `npm login`");
+
+      this.conf.set("registry", "https://registry.npmjs.org/", "cli");
+    }
+
+    // all consumers need a token
+    const registry = this.conf.get("registry");
+    const auth = getAuth(registry, this.conf);
+
+    if (auth.token) {
+      this.conf.set("token", auth.token, "cli");
+    }
+
     this.npmConfig = {
       npmClient: this.options.npmClient || "npm",
-      registry: this.options.registry,
+      registry: this.conf.get("registry"),
     };
 
-    return Promise.resolve(this.findVersionedUpdates()).then(result => {
+    let chain = Promise.resolve();
+
+    // validate user has valid npm credentials first,
+    // by far the most common form of failed execution
+    chain = chain.then(() => getNpmUsername(this.conf));
+    chain = chain.then(username => {
+      // username is necessary for subsequent access check
+      this.conf.add({ username }, "cmd");
+    });
+    chain = chain.then(() => this.findVersionedUpdates());
+
+    return chain.then(result => {
       if (!result) {
         // early return from nested VersionCommand
         return false;
@@ -195,7 +227,13 @@ class PublishCommand extends Command {
   }
 
   detectCanaryVersions() {
-    const { bump = "prepatch", preid = "alpha", tagVersionPrefix = "v", ignoreChanges } = this.options;
+    const {
+      bump = "prepatch",
+      preid = "alpha",
+      tagVersionPrefix = "v",
+      ignoreChanges,
+      forcePublish,
+    } = this.options;
     // "prerelease" and "prepatch" are identical, for our purposes
     const release = bump.startsWith("pre") ? bump.replace("release", "patch") : `pre${bump}`;
 
@@ -210,6 +248,7 @@ class PublishCommand extends Command {
         bump: "prerelease",
         canary: true,
         ignoreChanges,
+        forcePublish,
       })
     );
 
@@ -219,7 +258,7 @@ class PublishCommand extends Command {
 
       // semver.inc() starts a new prerelease at .0, git describe starts at .1
       // and build metadata is always ignored when comparing dependency ranges
-      return `${nextVersion}-${preid}.${refCount - 1}+${sha}`;
+      return `${nextVersion}-${preid}.${Math.max(0, refCount - 1)}+${sha}`;
     };
 
     if (this.project.isIndependent()) {
@@ -301,19 +340,14 @@ class PublishCommand extends Command {
   prepareRegistryActions() {
     let chain = Promise.resolve();
 
-    if (this.verifyRegistry) {
-      chain = chain.then(() => verifyNpmRegistry(this.project.rootPath, this.npmConfig));
-    }
-
     /* istanbul ignore if */
     if (process.env.LERNA_INTEGRATION) {
       return chain;
     }
 
-    if (this.verifyAccess) {
-      chain = chain.then(() =>
-        verifyNpmPackageAccess(this.packagesToPublish, this.project.rootPath, this.npmConfig)
-      );
+    // if no username was retrieved, don't bother validating
+    if (this.conf.get("username") && this.verifyAccess) {
+      chain = chain.then(() => verifyNpmPackageAccess(this.packagesToPublish, this.conf));
     }
 
     return chain;

@@ -15,7 +15,7 @@ const cloneFixture = require("@lerna-test/clone-fixture")(
 expect.addSnapshotSerializer(require("@lerna-test/serialize-changelog"));
 
 const env = {
-  // never actually upload when calling `npm install`
+  // never actually upload when calling `npm publish`
   npm_config_dry_run: true,
   // skip npm package validation, none of the stubs are real
   LERNA_INTEGRATION: "SKIP",
@@ -23,7 +23,7 @@ const env = {
 
 test(`lerna publish --conventional-commits independent changelog`, async () => {
   const { cwd } = await cloneFixture("independent", "feat: init repo");
-  const args = ["publish", "--conventional-commits", "--yes", "--no-verify-registry"];
+  const args = ["publish", "--conventional-commits", "--yes"];
 
   await commitChangeToPackage(cwd, "package-1", "feat(package-1): Add foo", { foo: true });
   await commitChangeToPackage(cwd, "package-1", "fix(package-1): Fix foo", { foo: false });
@@ -52,6 +52,10 @@ Successfully published:
  - package-4@4.1.0
 `);
 
+  // ensure changelog header is not duplicated
+  await commitChangeToPackage(cwd, "package-2", "fix(package-2): And another thing", { thing: true });
+  await cliRunner(cwd, env)(...args);
+
   const changelogFilePaths = await globby(["**/CHANGELOG.md"], {
     cwd,
     absolute: true,
@@ -75,7 +79,6 @@ Successfully published:
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
-<a name="1.1.0"></a>
 # 1.1.0 (YYYY-MM-DD)
 
 
@@ -100,7 +103,17 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
-<a name="2.1.0"></a>
+## [2.1.1](/compare/package-2@2.1.0...package-2@2.1.1) (YYYY-MM-DD)
+
+
+### Bug Fixes
+
+* **package-2:** And another thing ([SHA](COMMIT_URL))
+
+
+
+
+
 # 2.1.0 (YYYY-MM-DD)
 
 
@@ -124,7 +137,14 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
-<a name="4.0.0"></a>
+## [4.0.1](/compare/package-3@4.0.0...package-3@4.0.1) (YYYY-MM-DD)
+
+**Note:** Version bump only for package package-3
+
+
+
+
+
 # 4.0.0 (YYYY-MM-DD)
 
 
@@ -149,7 +169,6 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
-<a name="4.1.0"></a>
 # 4.1.0 (YYYY-MM-DD)
 
 
@@ -168,7 +187,14 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
-<a name="5.1.0"></a>
+## [5.1.1](/compare/package-5@5.1.0...package-5@5.1.1) (YYYY-MM-DD)
+
+**Note:** Version bump only for package package-5
+
+
+
+
+
 # 5.1.0 (YYYY-MM-DD)
 
 
